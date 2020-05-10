@@ -1,0 +1,41 @@
+language: python
+
+dist: trusty
+sudo: false
+
+matrix:
+    include:
+        - python: '2.7'
+        - python: '3.4'
+        - python: '3.5'
+        - python: '3.6'
+        - python: '3.7'
+          dist: xenial
+          sudo: true
+        - env: cfscrape_node='4.5'
+        - env: cfscrape_node='node'
+        - os: osx
+          language: node_js
+          node_js: node
+          cache:
+            directories:
+              - $HOME/Library/Caches/Homebrew
+              - /usr/local/Homebrew
+
+cache: pip
+
+before_install:
+   - |
+     if [ -n "${cfscrape_node}" ]; then
+       source ~/.nvm/nvm.sh
+       nvm install "${cfscrape_node}"
+       nvm use "${cfscrape_node}"
+     fi
+
+install:
+  - node -p process.versions
+  - make
+
+script: make ci
+
+after_success: make coverage

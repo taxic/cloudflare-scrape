@@ -1,13 +1,13 @@
 cloudflare-scrape
 =================
 
-A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). Cloudflare changes their techniques periodically, so I will update this repo frequently.
+A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). Python versions 2.6 - 3.7 are supported. Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
-This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports Javascript, though they may add additional techniques in the future.
+This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports JavaScript, though they may add additional techniques in the future.
 
-Due to Cloudflare continually changing and hardening their protection page, cloudflare-scrape requires Node.js to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
+Due to Cloudflare continually changing and hardening their protection page, cloudflare-scrape requires Node.js to solve JavaScript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's JavaScript.
 
-Note: This only works when regular Cloudflare anti-bots is enabled (the "Checking your browser before accessing..." loading page). If there is a reCAPTCHA challenge, you're out of luck. Thankfully, the Javascript check page is much more common.
+Note: This only works when regular Cloudflare anti-bots is enabled (the "Checking your browser before accessing..." loading page). If there is a reCAPTCHA challenge, you're out of luck. Thankfully, the JavaScript check page is much more common.
 
 For reference, this is the default message Cloudflare uses for these sorts of pages:
 
@@ -19,43 +19,44 @@ For reference, this is the default message Cloudflare uses for these sorts of pa
 
 Any script using cloudflare-scrape will sleep for 5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
-Warning
-======
-
-**Due to a critical security vulnerability, if you are running any version below 1.9 please upgrade to version 1.9 or higher immediately.** Versions before 1.9.0 used unsafe Javascript execution mechanisms which could result in arbitrary code execution. If you are running a vulnerable version, a malicious website owner could craft a page which executes arbitrary code on the machine that runs this script. This can only occur if the website that the user attempts to scrape has specifically prepared a page to exploit vulnerable versions of cfscrape.
-
 Installation
 ============
 
-Simply run `pip install cfscrape`. The PyPI package is at https://pypi.python.org/pypi/cfscrape/
+Simply run `pip install cfscrape`. You can upgrade with `pip install -U cfscrape`. The PyPI package is at https://pypi.python.org/pypi/cfscrape/
 
 Alternatively, clone this repository and run `python setup.py install`.
 
-Dependencies
+Node.js dependency
 ============
 
-* Python 2.6 - 3.x
-* **[Requests](https://github.com/kennethreitz/requests)** >= 2.0
-* **[PyExecJS](https://pypi.python.org/pypi/PyExecJS)**
-* **Node.js** is required for (safe) Javascript execution.
-    * Your computer or server may already have it (check with `node -v`). If not, you can install it with `apt-get install nodejs` on Ubuntu and Debian. Otherwise, please read [Node's installation instructions](https://nodejs.org/en/download/package-manager/).
+[Node.js](https://nodejs.org/) version 10 or above is required to interpret Cloudflare's obfuscated JavaScript challenge.
 
-`python setup.py install` will install the Python dependencies automatically. Node is the only application you need to install yourself.
+Your machine may already have Node installed (check with `node -v`). If not, you can install it with `apt-get install nodejs` on Ubuntu >= 18.04 and Debian >= 9 and `brew install node` on macOS. Otherwise, you can get it from [Node's download page](https://nodejs.org/en/download/) or [their package manager installation page](https://nodejs.org/en/download/package-manager/).
+
 
 Updates
 =======
 
-Cloudflare modifies their anti-bot protection page occasionally. So far it has changed maybe once per year on average.
+Cloudflare regularly modifies their anti-bot protection page and improves their bot detection capabilities.
 
 If you notice that the anti-bot page has changed, or if this module suddenly stops working, please create a GitHub issue so that I can update the code accordingly.
 
-In your issue, please include:
+* Many issues are a result of users not updating to the latest release of this project. Before filing an issue, please run the following command to update cloudflare-scrape to the latest version:
 
-* The full exception and stack trace.
+```
+pip install -U cfscrape
+```
+
+If you are still encountering a problem, create a GitHub issue and please include:
+
+* The version number from `pip show cfscrape`.
+* The relevant code snippet that's experiencing an issue or raising an exception.
+* The full exception and traceback, if applicable.
 * The URL of the Cloudflare-protected page which the script does not work on.
 * A Pastebin or Gist containing the HTML source of the protected page.
 
-[This issue comment is a good example.](https://github.com/Anorov/cloudflare-scrape/issues/3#issuecomment-45827514)
+
+If you've upgraded and are still experiencing problems, **[click here to create a GitHub issue and fill out the pertinent information](https://github.com/Anorov/cloudflare-scrape/issues/new?assignees=&labels=bug&template=bug-report-template.md&title=)**.
 
 Usage
 =====
@@ -87,6 +88,16 @@ scraper = cfscrape.create_scraper(sess=session)
 ```
 
 Unfortunately, not all of Requests' session attributes are easily transferable, so if you run into problems with this, you should replace your initial `sess = requests.session()` call with `sess = cfscrape.create_scraper()`.
+
+### Delays
+
+Normally, when a browser is faced with a Cloudflare IUAM challenge page, Cloudflare requires the browser to wait 5 seconds before submitting the challenge answer. If a website is under heavy load, sometimes this may fail. One solution is to increase the delay (perhaps to 10 or 15 seconds, depending on the website). If you would like to override this delay, pass the `delay` keyword argument to `create_scraper()` or `CloudflareScraper()`.
+
+There is no need to override this delay unless cloudflare-scrape generates an error recommending you increase the delay.
+
+```python
+scraper = cfscrape.create_scraper(delay=10)
+```
 
 ## Integration
 
